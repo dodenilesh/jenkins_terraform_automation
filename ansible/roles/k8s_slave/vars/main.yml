@@ -1,0 +1,7 @@
+---
+# vars file for k8s_slave
+
+packages:
+        - kubelet
+        - kubeadm
+        - kubectl

@@ -1,0 +1,13 @@
+
+- hosts: k8s_master
+  become: yes
+  roles:
+  - name: "Configuring Kubernetes Master"
+    role: "/home/oem/jenkins/jenkins_terraform_automation/ansible/roles/k8s_master"
+       
+         
+- hosts: k8s_slaves
+  become: yes
+  roles:
+  - name: "Configuring Kubernetes Slaves"
+    role: "/home/oem/jenkins/jenkins_terraform_automation/ansible/roles/k8s_slave"

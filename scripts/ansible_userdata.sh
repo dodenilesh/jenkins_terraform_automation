@@ -1,124 +1,6 @@
 #!/bin/bash
 
 set -x
-
-function wait_for_jenkins()
-{
-  while (( 1 )); do
-      echo "waiting for Jenkins to launch on port [8080] ..."
-      
-      netcat -zv 127.0.0.1 8080
-      if (( $? == 0 )); then
-          break
-      fi
-
-      sleep 3
-  done
-
-  echo "Jenkins launched"
-}
-
-function updating_jenkins_master_password ()
-{
-
-  cat > ./jenkinsHash.py <<EOF
-import bcrypt
-import sys
-
-if not sys.argv[1]:
-  sys.exit(10)
-
-plaintext_pwd=sys.argv[1]
-encrypted_pwd=bcrypt.hashpw(plaintext_pwd.encode('utf8'), bcrypt.gensalt(rounds=10, prefix=b"2a"))
-isCorrect=bcrypt.checkpw(plaintext_pwd.encode('utf8'), encrypted_pwd)
-
-if not isCorrect:
-  sys.exit(20);
-
-print(encrypted_pwd.decode('ascii'))
-EOF
-   
-  chmod +x ./jenkinsHash.py
-  
-  # Wait till /var/lib/jenkins/users/admin* folder gets created
-  sleep 3
-  
-  #cd /var/lib/jenkins/users/admin*
-  pwd
-  while (( 1 )); do
-      echo "Waiting for Jenkins to generate admin user's config file ..."
-      sudo find  /var/lib/jenkins/users/admin_* | grep config.xml
-      if [[ $? -eq 0 ]]; then
-          break
-      fi
-
-      sleep 3
-  done
-
-  echo "Admin config file created"
-
-  admin_password=$(python3 ./jenkinsHash.py password 2>&1)
-  echo $admin_password
-  
-  sudo -s chmod -R  777 /var/lib/jenkins/users/admin*
-  cd /var/lib/jenkins/users/admin*
-  # Please do not remove alter quote as it keeps the hash syntax intact or else while substitution, $<character> will be replaced by null
-  xmlstarlet -q ed --inplace -u "/user/properties/hudson.security.HudsonPrivateSecurityRealm_-Details/passwordHash" -v '#jbcrypt:'"$admin_password" config.xml
-
-  # Restart
-  sudo systemctl restart jenkins.service
-  sleep 3
-
-}
-
-function install_packages ()
-{
-
-  wget -q -O - https://pkg.jenkins.io/debian-stable/jenkins.io.key |sudo gpg --dearmor -o /usr/share/keyrings/jenkins.gpg
-  sudo sh -c 'echo deb [signed-by=/usr/share/keyrings/jenkins.gpg] http://pkg.jenkins.io/debian-stable binary/ > /etc/apt/sources.list.d/jenkins.list'
-  sudo apt update
-  sudo apt install -y jenkins
-  sudo systemctl enable jenkins.service
-  sudo systemctl restart jenkins.service
-  sleep 3
-}
-
-function configure_jenkins_server ()
-{
-  # Jenkins cli
-  echo "installing the Jenkins cli ..."
-  sudo cp /var/cache/jenkins/war/WEB-INF/lib/cli-2.375.1.jar /var/lib/jenkins/jenkins-cli.jar
-
-  # Getting initial password
-  # PASSWORD=$(cat /var/lib/jenkins/secrets/initialAdminPassword)
-  PASSWORD="password"
-  sleep 10
-
-  jenkins_dir="/var/lib/jenkins"
-  plugins_dir="$jenkins_dir/plugins"
-
-  sudo cd $jenkins_dir
-
-  # Open JNLP port
-  xmlstarlet -q ed --inplace -u "/hudson/slaveAgentPort" -v 33453 config.xml
-
-  cd $plugins_dir || { echo "unable to chdir to [$plugins_dir]"; exit 1; }
-
-  # List of plugins that are needed to be installed 
-  plugin_list="git-client git github-api github-oauth github MSBuild ssh-slaves workflow-aggregator ws-cleanup ansible"
-
-  # remove existing plugins, if any ...
-  rm -rfv $plugin_list
-
-  for plugin in $plugin_list; do
-      echo "installing plugin [$plugin] ..."
-      java -jar $jenkins_dir/jenkins-cli.jar -s http://127.0.0.1:8080/ -auth admin:$PASSWORD install-plugin $plugin
-  done
-
-  # Restart jenkins after installing plugins
-  java -jar $jenkins_dir/jenkins-cli.jar -s http://127.0.0.1:8080 -auth admin:$PASSWORD safe-restart
-}
-
 function copy_auth_key() {
     cd /home/ubuntu/.ssh
     cat >> authorized_keys <<EOF
@@ -175,24 +57,69 @@ KIVNhNgqTojjcAAAAib2VtQG9lbS1IUC1QYXZpbGlvbi0xNS1Ob3RlYm9vay1QQwE=
 EOF
 }
 
+function copy_private_pem_key() {
+    touch jenkins_server.pem
+    chown ubuntu:ubuntu jenkins_server.pem
+    cat > jenkins_server.pem <<EOF
+-----BEGIN OPENSSH PRIVATE KEY-----
+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
+-----END OPENSSH PRIVATE KEY-----  
+EOF
+}
+
+function installing_packages() {
+    sudo apt-add-repository ppa:ansible/ansible -y
+    sudo apt update -y
+    sudo apt install ansible -y
+
+}
+
+
 
 ### script starts here ###
+exec >> /var/logkey_setup.log 2>&1
 
-install_packages
-
-wait_for_jenkins
-
-updating_jenkins_master_password
-
-wait_for_jenkins
-
-configure_jenkins_server
-
+pwd
+touch testfile.txt
 copy_auth_key
-
 copy_pub_key
-
 copy_private_key
-
+installing_packages
+copy_private_pem_key
 echo "Done"
 exit 0

@@ -1,0 +1,10 @@
+- name: Transfer and execute a script.
+  hosts: jenkins_group
+  become: yes
+  gather_facts: yes
+  tasks:
+     - name: Transfer the script
+       copy: src=/home/oem/jenkins/jenkins_terraform_automation/scripts/jenkins_credentials.sh dest=/home/ubuntu/ mode=0777
+
+     - name: Execute the script
+       command: sh /home/ubuntu/jenkins_credentials.sh

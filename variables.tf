@@ -31,7 +31,7 @@ variable "jenkins_admin_password" {
 
 variable "os_names" {
   type    = list(string)
-  default = ["Ansible_controller_node", "K8S_Master", "K8S_Slave1", "K8S_Slave2"]
+  default = ["Ansible_controller", "K8S_Master", "K8S_Slave1", "K8S_Slave2"]
 
 }
 
