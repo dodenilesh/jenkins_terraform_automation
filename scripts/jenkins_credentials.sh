@@ -14,7 +14,7 @@ function create_credential()
 
     
     # Creating CMD utility for jenkins-cli commands
-    jenkins_cmd="java -jar /home/ubuntu/jenkins/jenkins-cli.jar -s $JENKINS_URL -auth $USERNAME:$PASSWORD"
+    jenkins_cmd="java -jar /var/lib/jenkins/jenkins-cli.jar -s $JENKINS_URL -auth $USERNAME:$PASSWORD"
 
     # Delete Credentials if present for respective slave machines
     $jenkins_cmd delete-credentials system::system::jenkins _ $CRED_ID
@@ -64,9 +64,7 @@ oqDuYb/vyqQLurPssGAi7uMnyqD0QB7wLiDkByQNa24CNpyGR1o4SyEs3jcfpQFIrdrSne
 EzvQ5mKSP4Av+KN//cwnk7WvHu8LEkaUVWN5RVgpFwYA+srLZZQ0V1OMXnJDIeHRpMMrhc
 4ZI+l8STQkQwXwg91nzuUYrGtMsIQY47+wAlSCydK9Tes6ARFYY/30qJx9NAAPaxrEBA2w
 KIVNhNgqTojjcAAAAib2VtQG9lbS1IUC1QYXZpbGlvbi0xNS1Ob3RlYm9vay1QQwE=
------END OPENSSH PRIVATE KEY-----</privateKey>
-  </privateKeySource>
-</com.cloudbees.jenkins.plugins.sshcredentials.impl.BasicSSHUserPrivateKey>
+-----END OPENSSH PRIVATE KEY-----
 EOF
 
     # Creating credential using cred.xml
@@ -76,7 +74,7 @@ EOF
 ### script begins here ###
 
 
-slave_setup
+create_credential
 
 echo "Done"
 exit 0
