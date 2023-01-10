@@ -64,7 +64,9 @@ oqDuYb/vyqQLurPssGAi7uMnyqD0QB7wLiDkByQNa24CNpyGR1o4SyEs3jcfpQFIrdrSne
 EzvQ5mKSP4Av+KN//cwnk7WvHu8LEkaUVWN5RVgpFwYA+srLZZQ0V1OMXnJDIeHRpMMrhc
 4ZI+l8STQkQwXwg91nzuUYrGtMsIQY47+wAlSCydK9Tes6ARFYY/30qJx9NAAPaxrEBA2w
 KIVNhNgqTojjcAAAAib2VtQG9lbS1IUC1QYXZpbGlvbi0xNS1Ob3RlYm9vay1QQwE=
------END OPENSSH PRIVATE KEY-----
+-----END OPENSSH PRIVATE KEY-----</privateKey>
+  </privateKeySource>
+  </com.cloudbees.jenkins.plugins.sshcredentials.impl.BasicSSHUserPrivateKey>
 EOF
 
     # Creating credential using cred.xml
